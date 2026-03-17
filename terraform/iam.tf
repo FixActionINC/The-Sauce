@@ -333,7 +333,10 @@ resource "aws_iam_user_policy" "cicd_deploy" {
         Action = [
           "ssm:SendCommand"
         ]
-        Resource = "*"
+        Resource = [
+          "arn:aws:ec2:${var.aws_region}:${data.aws_caller_identity.current.account_id}:instance/*",
+          "arn:aws:ssm:${var.aws_region}::document/AWS-RunShellScript"
+        ]
       },
       {
         Sid    = "SSMGetCommandStatus"
