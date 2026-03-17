@@ -1,0 +1,89 @@
+# =============================================================================
+# The Sauce - Docker Compose Production Stack
+# Services: Next.js app, Nginx reverse proxy, Certbot SSL renewal
+# =============================================================================
+
+services:
+  # ---------------------------------------------------------------------------
+  # Next.js Application (standalone mode)
+  # ---------------------------------------------------------------------------
+  app:
+    image: ${ECR_REPOSITORY:-the-sauce-web}:latest
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      # DATABASE_URL is provided by the .env file, pointing to the
+      # AWS RDS PostgreSQL instance. No local volume needed.
+      - NODE_ENV=production
+      # Next.js standalone server must listen on all interfaces inside
+      # the container so Nginx can reach it via the Docker network.
+      - HOSTNAME=0.0.0.0
+    # Security hardening: drop all Linux capabilities and prevent
+    # privilege escalation (e.g., setuid binaries) inside the container.
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    expose:
+      # Only expose port 3000 to the internal Docker network.
+      # Nginx handles external traffic on ports 80/443.
+      - "3000"
+    networks:
+      - internal
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3000/"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+
+  # ---------------------------------------------------------------------------
+  # Nginx Reverse Proxy
+  # ---------------------------------------------------------------------------
+  nginx:
+    image: nginx:1.27-alpine
+    restart: unless-stopped
+    ports:
+      # Public-facing ports
+      - "80:80"
+      - "443:443"
+    volumes:
+      # Nginx configuration (read-only)
+      - ./docker/nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./docker/nginx/conf.d:/etc/nginx/conf.d:ro
+      # Certbot volumes for SSL certificate provisioning and renewal
+      - certbot-webroot:/var/www/certbot:ro
+      - certbot-certs:/etc/letsencrypt:ro
+    depends_on:
+      - app
+    networks:
+      - internal
+
+  # ---------------------------------------------------------------------------
+  # Certbot - Automated SSL Certificate Renewal
+  # ---------------------------------------------------------------------------
+  # Runs in a loop, checking for certificate renewals every 12 hours.
+  # Initial certificate must be obtained manually:
+  #   docker compose run --rm certbot certonly --webroot -w /var/www/certbot \
+  #     -d jonesingforsauce.com -d www.jonesingforsauce.com \
+  #     --email admin@jonesingforsauce.com --agree-tos --no-eff-email
+  certbot:
+    image: certbot/certbot
+    volumes:
+      - certbot-webroot:/var/www/certbot
+      - certbot-certs:/etc/letsencrypt
+    entrypoint: "/bin/sh -c 'trap exit TERM; while :; do certbot renew; sleep 12h & wait $${!}; done'"
+
+volumes:
+  # Certbot ACME challenge webroot
+  certbot-webroot:
+  # SSL certificates and private keys
+  certbot-certs:
+
+networks:
+  internal:
+    driver: bridge

@@ -1,0 +1,176 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Product {
+  id               Int      @id @default(autoincrement())
+  name             String
+  slug             String   @unique
+  tagline          String?
+  description      String? @db.Text // Rich text as HTML
+  shortDescription String? @db.Text
+  price            Decimal @db.Decimal(10, 2)
+  compareAtPrice   Decimal? @db.Decimal(10, 2)
+  squareCatalogId   String?
+  squareVariationId String?  @unique
+  ingredients      String? @db.Text
+  features         String? @db.Text // JSON string array
+  stock            Int      @default(0)
+  isActive         Boolean  @default(true)
+  isFeatured       Boolean  @default(false)
+  category         String   @default("original") // original, hot, mild, limited-edition, bundle
+  sortOrder        Int      @default(0)
+
+  // SEO
+  metaTitle       String?
+  metaDescription String? @db.Text
+
+  // Nutrition
+  servingSize String?
+  calories    Int?
+  totalFat    String?
+  sodium      String?
+  totalCarbs  String?
+  sugars      String?
+  protein     String?
+
+  images ProductImage[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([isActive, isFeatured, sortOrder])
+  @@index([category])
+}
+
+model ProductImage {
+  id        Int     @id @default(autoincrement())
+  url       String
+  alt       String?
+  width     Int?
+  height    Int?
+  isPrimary Boolean @default(false)
+  sortOrder Int     @default(0)
+
+  productId Int
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@index([productId])
+}
+
+model SiteSettings {
+  id              Int     @id @default(1)
+  siteName        String  @default("The Sauce by Tyrone Jones")
+  siteDescription String? @db.Text
+  contactEmail    String?
+  shippingNote    String?
+  footerText      String? @db.Text // HTML
+
+  // Announcement bar
+  announcementMessage String?
+  announcementLink    String?
+  announcementActive  Boolean @default(false)
+
+  // SEO defaults
+  defaultMetaTitle       String?
+  defaultMetaDescription String? @db.Text
+
+  // Homepage media
+  heroVideoUrl String?
+
+  updatedAt DateTime @updatedAt
+}
+
+model SocialLink {
+  id        Int    @id @default(autoincrement())
+  platform  String // instagram, facebook, twitter, tiktok, youtube, amazon
+  url       String
+  sortOrder Int    @default(0)
+}
+
+model AdminUser {
+  id           Int      @id @default(autoincrement())
+  email        String   @unique
+  passwordHash String
+  name         String?
+  createdAt    DateTime @default(now())
+}
+
+model Order {
+  id                    Int         @id @default(autoincrement())
+  squareOrderId     String      @unique
+  squarePaymentId   String?
+  customerEmail         String?
+  customerName          String?
+  shippingName          String?
+  shippingAddress       String? @db.Text // JSON stringified
+  amountTotal           Int // cents
+  shippingAmount        Int? // cents
+  currency              String      @default("usd")
+  status                String      @default("completed") // completed, refunded
+  items                 OrderItem[]
+  createdAt             DateTime    @default(now())
+  updatedAt             DateTime    @updatedAt
+
+  @@index([customerEmail])
+  @@index([createdAt])
+  @@index([status, createdAt])
+}
+
+model OrderItem {
+  id            Int    @id @default(autoincrement())
+  orderId       Int
+  order         Order  @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  productName   String
+  squareVariationId String?
+  quantity      Int
+  unitAmount    Int // cents
+  totalAmount   Int // cents
+
+  @@index([orderId])
+  @@index([squareVariationId])
+}
+
+model Testimonial {
+  id        Int      @id @default(autoincrement())
+  name      String
+  title     String?
+  quote     String   @db.Text
+  imageUrl  String?
+  rating    Int      @default(5)
+  featured  Boolean  @default(false)
+  isActive  Boolean  @default(true)
+  sortOrder Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([featured, isActive, sortOrder])
+}
+
+model GalleryImage {
+  id        Int      @id @default(autoincrement())
+  url       String
+  alt       String?
+  sortOrder Int      @default(0)
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+
+  @@index([isActive, sortOrder])
+}
+
+model ContactMessage {
+  id        Int      @id @default(autoincrement())
+  name      String
+  email     String
+  message   String @db.Text
+  isRead    Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  @@index([isRead])
+  @@index([createdAt])
+}

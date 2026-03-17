@@ -1,0 +1,76 @@
+# CD Pipeline - Builds Docker image, pushes to ECR, and deploys to EC2 on merge to main
+# Platform: GitHub Actions | AWS ECR | Docker Compose on EC2
+#
+# Required GitHub Secrets:
+#   AWS_ACCESS_KEY_ID      - IAM access key with ECR push permissions
+#   AWS_SECRET_ACCESS_KEY  - IAM secret key
+#   AWS_REGION             - AWS region (e.g. us-west-2)
+#   ECR_REPOSITORY         - Full ECR repository URI (e.g. 123456789.dkr.ecr.us-west-2.amazonaws.com/the-sauce/web)
+#   EC2_HOST               - EC2 instance public IP or hostname
+#   EC2_SSH_KEY            - Private SSH key for the "deploy" user on EC2
+name: Deploy
+
+on:
+  push:
+    branches:
+      - main
+
+concurrency:
+  group: deploy-production
+  cancel-in-progress: false
+
+jobs:
+  build-and-push:
+    name: Build & Push Docker Image
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      - name: Login to Amazon ECR
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Build and push Docker image
+        run: |
+          docker build -t ${{ secrets.ECR_REPOSITORY }}:${{ github.sha }} -t ${{ secrets.ECR_REPOSITORY }}:latest .
+          docker push ${{ secrets.ECR_REPOSITORY }}:${{ github.sha }}
+          docker push ${{ secrets.ECR_REPOSITORY }}:latest
+
+  deploy:
+    name: Deploy to EC2
+    needs: build-and-push
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Sync config files to EC2
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: deploy
+          key: ${{ secrets.EC2_SSH_KEY }}
+          source: "docker-compose.yml,docker/"
+          target: "/opt/the-sauce"
+
+      - name: Deploy via SSH
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: deploy
+          key: ${{ secrets.EC2_SSH_KEY }}
+          envs: ECR_REPOSITORY,AWS_REGION
+          script: |
+            export ECR_REPOSITORY="${ECR_REPOSITORY}"
+            export AWS_REGION="${AWS_REGION}"
+            /opt/the-sauce/docker/deploy.sh
+        env:
+          ECR_REPOSITORY: ${{ secrets.ECR_REPOSITORY }}
+          AWS_REGION: ${{ secrets.AWS_REGION }}
