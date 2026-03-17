@@ -1,6 +1,12 @@
 #!/bin/bash
 set -e
 
+# Guard: SSM Run Command executes as root — deploy.sh must run as the deploy user
+if [ "$(id -u)" = "0" ]; then
+  echo "ERROR: deploy.sh must not run as root. Use 'runuser -u deploy' to invoke." >&2
+  exit 1
+fi
+
 PROJECT_NAME="${PROJECT_NAME:-the-sauce}"
 AWS_REGION="${AWS_REGION:-us-west-2}"
 DEPLOY_DIR="/opt/the-sauce"

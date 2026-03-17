@@ -244,6 +244,8 @@ resource "aws_iam_role_policy" "dynamodb_sessions" {
 # --- CI/CD IAM User ---
 # Dedicated IAM user for GitHub Actions with minimal permissions:
 #   - Push Docker images to ECR (build & deploy pipeline)
+#   - Sync deploy config files to S3 (replaces SCP over SSH)
+#   - Run deploy script on EC2 via SSM Run Command (replaces SSH)
 # Access keys are created here; the secret key is output for one-time retrieval.
 resource "aws_iam_user" "cicd" {
   name = "${var.project_name}-cicd"
@@ -285,6 +287,64 @@ resource "aws_iam_user_policy" "cicd_ecr" {
           "ecr:PutImage"
         ]
         Resource = aws_ecr_repository.web.arn
+      }
+    ]
+  })
+}
+
+# --- CI/CD Deploy Policy ---
+# Allows the CI/CD user to:
+#   1. Sync config files (docker-compose, nginx) to S3 for EC2 to pull
+#   2. Trigger deploy.sh on EC2 via SSM Run Command (no SSH required)
+#   3. Poll for command completion status
+resource "aws_iam_user_policy" "cicd_deploy" {
+  name = "${var.project_name}-cicd-deploy"
+  user = aws_iam_user.cicd.name
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Sid    = "S3SyncDeployConfig"
+        Effect = "Allow"
+        Action = [
+          "s3:PutObject",
+          "s3:GetObject",
+          "s3:DeleteObject"
+        ]
+        Resource = "${aws_s3_bucket.backups.arn}/deploy-config/*"
+      },
+      {
+        Sid    = "S3ListDeployConfig"
+        Effect = "Allow"
+        Action = [
+          "s3:ListBucket"
+        ]
+        Resource = aws_s3_bucket.backups.arn
+        Condition = {
+          StringLike = {
+            "s3:prefix" = ["deploy-config/*"]
+          }
+        }
+      },
+      {
+        Sid    = "SSMSendCommand"
+        Effect = "Allow"
+        Action = [
+          "ssm:SendCommand"
+        ]
+        Resource = [
+          aws_instance.app.arn,
+          "arn:aws:ssm:${var.aws_region}::document/AWS-RunShellScript"
+        ]
+      },
+      {
+        Sid    = "SSMGetCommandStatus"
+        Effect = "Allow"
+        Action = [
+          "ssm:GetCommandInvocation"
+        ]
+        Resource = "*"
       }
     ]
   })
