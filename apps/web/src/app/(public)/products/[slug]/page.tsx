@@ -9,6 +9,7 @@ import {
 } from "@/lib/api/products";
 import { formatPrice, getProductImageUrl } from "@/lib/utils";
 import { sanitize } from "@/lib/sanitize";
+import { productJsonLd, breadcrumbJsonLd } from "@/lib/structured-data";
 import ProductGallery from "@/components/product/ProductGallery";
 import ProductCard from "@/components/product/ProductCard";
 import AddToCartSection from "@/components/product/AddToCartSection";
@@ -79,6 +80,18 @@ export default async function ProductDetailPage({ params }: Props) {
 
   return (
     <main className="section-padding min-h-screen">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify(productJsonLd(product)),
+        }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify(breadcrumbJsonLd(product.name, product.slug)),
+        }}
+      />
       <div className="mx-auto max-w-6xl">
         {/* Breadcrumb */}
         <nav aria-label="Breadcrumb" className="mb-8">

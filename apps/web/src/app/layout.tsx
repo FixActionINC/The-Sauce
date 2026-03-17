@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
+import { organizationJsonLd, webSiteJsonLd } from "@/lib/structured-data";
 import "./globals.css";
 
 const inter = Inter({
@@ -64,6 +65,18 @@ export default function RootLayout({
   return (
     <html lang="en" className={inter.variable}>
       <body className="bg-surface text-text-primary font-body antialiased">
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify(organizationJsonLd()),
+          }}
+        />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify(webSiteJsonLd()),
+          }}
+        />
         {children}
       </body>
     </html>
