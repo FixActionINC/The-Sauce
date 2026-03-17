@@ -56,20 +56,18 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Debug - Verify AWS identity and credentials
+      - name: Debug - Test with hardcoded instance ID
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           AWS_DEFAULT_REGION: us-west-2
+          INSTANCE_SECRET: ${{ secrets.EC2_INSTANCE_ID }}
         run: |
           unset AWS_SESSION_TOKEN
-          echo "==> Caller identity:"
-          aws sts get-caller-identity
-          echo "==> AWS_DEFAULT_REGION=$AWS_DEFAULT_REGION"
-          echo "==> Has AWS_SESSION_TOKEN: ${AWS_SESSION_TOKEN:+YES}"
-          echo "==> Testing SSM send-command..."
+          echo "==> Secret instance ID length: ${#INSTANCE_SECRET}"
+          echo "==> Testing with HARDCODED instance ID..."
           aws ssm send-command \
-            --instance-ids "${{ secrets.EC2_INSTANCE_ID }}" \
+            --instance-ids "i-0436af78e05142202" \
             --document-name "AWS-RunShellScript" \
             --region us-west-2 \
             --parameters 'commands=["echo hello"]' \
