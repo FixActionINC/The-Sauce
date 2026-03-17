@@ -18,7 +18,7 @@ export function ContactForm() {
     return (
       <div className="mt-12 border border-brand-gold/30 bg-brand-gold/10 px-6 py-8 text-center">
         <p className="text-lg font-semibold text-brand-gold">
-          Thank you! We'll get back to you soon.
+          Thank you! We&apos;ll get back to you soon.
         </p>
       </div>
     );
