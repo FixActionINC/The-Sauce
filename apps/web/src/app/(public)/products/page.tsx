@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import type { Product, ProductImage } from "@prisma/client";
 import { getProducts } from "@/lib/api/products";
 import { getSiteSettings } from "@/lib/api/site-settings";
 import ProductCard from "@/components/product/ProductCard";
@@ -99,7 +100,7 @@ export default async function ProductsPage() {
           </div>
         ) : (
           <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-            {products.map((product, idx) => (
+            {products.map((product: Product & { images: ProductImage[] }, idx: number) => (
               <ProductCard key={product.id} product={product} index={idx} />
             ))}
           </div>

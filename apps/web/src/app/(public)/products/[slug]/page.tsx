@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import type { Product, ProductImage } from "@prisma/client";
 import {
   getProductBySlug,
   getProductSlugs,
@@ -250,7 +251,7 @@ export default async function ProductDetailPage({ params }: Props) {
               You May Also Like
             </h2>
             <div className="mt-8 grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
-              {relatedProducts.map((related, idx) => (
+              {relatedProducts.map((related: Product & { images: ProductImage[] }, idx: number) => (
                 <ProductCard
                   key={related.id}
                   product={related}

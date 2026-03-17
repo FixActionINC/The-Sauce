@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import type { ProductImage } from "@prisma/client";
 import { ProductForm } from "@/components/admin/ProductForm";
 import ImageManager from "@/components/admin/ImageManager";
 import { updateProduct } from "@/lib/actions/products";
@@ -26,7 +27,7 @@ export default async function EditProductPage({ params }: EditProductPageProps) 
   // Bind the productId to the update action
   const boundUpdateAction = updateProduct.bind(null, productId);
 
-  const imageData = product.images.map((img) => ({
+  const imageData = product.images.map((img: ProductImage) => ({
     id: img.id,
     url: img.url,
     alt: img.alt,

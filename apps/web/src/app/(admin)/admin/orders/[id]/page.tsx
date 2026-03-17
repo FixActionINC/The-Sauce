@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import type { OrderItem } from "@prisma/client";
 import { getOrderById } from "@/lib/services/order.service";
 
 interface ShippingAddress {
@@ -43,7 +44,7 @@ export default async function AdminOrderDetailPage({
   }
 
   const address = parseShippingAddress(order.shippingAddress);
-  const subtotal = order.items.reduce((sum, item) => sum + item.totalAmount, 0);
+  const subtotal = order.items.reduce((sum: number, item: OrderItem) => sum + item.totalAmount, 0);
 
   return (
     <div>
@@ -185,7 +186,7 @@ export default async function AdminOrderDetailPage({
             </tr>
           </thead>
           <tbody className="divide-y divide-surface-overlay">
-            {order.items.map((item) => (
+            {order.items.map((item: OrderItem) => (
               <tr
                 key={item.id}
                 className="bg-surface transition-colors hover:bg-surface-elevated/50"

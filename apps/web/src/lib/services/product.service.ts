@@ -89,7 +89,7 @@ export async function getProductSlugs(): Promise<{ slug: string }[]> {
     where: { isActive: true },
     select: { slug: true },
   });
-  return products.map((p) => ({ slug: p.slug }));
+  return products.map((p: { slug: string }) => ({ slug: p.slug }));
 }
 
 /**
@@ -199,7 +199,8 @@ export async function verifyCheckoutProducts(
     },
   });
 
-  const productByVariationId = new Map(
+  type VerifyProduct = (typeof products)[number];
+  const productByVariationId = new Map<string | null, VerifyProduct>(
     products.map((p) => [p.squareVariationId, p]),
   );
 

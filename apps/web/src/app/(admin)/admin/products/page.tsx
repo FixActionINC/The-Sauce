@@ -1,4 +1,5 @@
 import Link from "next/link";
+import type { Product, ProductImage } from "@prisma/client";
 import { formatPrice } from "@/lib/utils";
 import { DeleteProductButton } from "@/components/admin/DeleteProductButton";
 import { getAllProductsForAdmin } from "@/lib/services/product.service";
@@ -47,7 +48,7 @@ export default async function AdminProductsPage() {
                 </td>
               </tr>
             )}
-            {products.map((product) => (
+            {products.map((product: Product & { images: ProductImage[] }) => (
               <tr
                 key={product.id}
                 className="bg-surface transition-colors hover:bg-surface-elevated/50"

@@ -1,3 +1,4 @@
+import type { ContactMessage } from "@prisma/client";
 import { getContactMessages } from "@/lib/services/contact.service";
 
 export default async function AdminMessagesPage() {
@@ -45,7 +46,7 @@ export default async function AdminMessagesPage() {
                 </td>
               </tr>
             )}
-            {messages.map((msg) => (
+            {messages.map((msg: ContactMessage) => (
               <tr
                 key={msg.id}
                 className="bg-surface transition-colors hover:bg-surface-elevated/50"

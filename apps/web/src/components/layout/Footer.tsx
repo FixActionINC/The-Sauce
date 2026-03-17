@@ -1,5 +1,6 @@
 import Link from "next/link";
 import Image from "next/image";
+import type { SocialLink } from "@prisma/client";
 import { Container } from "@/components/ui/Container";
 import { getSocialLinks, getSiteSettings } from "@/lib/api/site-settings";
 import { brand } from "@/lib/brand";
@@ -136,7 +137,7 @@ export async function Footer() {
         {/* Social links */}
         {socialLinks.length > 0 && (
           <div className="mt-8 flex items-center gap-4 border-t border-surface-overlay pt-6">
-            {socialLinks.map((link) => (
+            {socialLinks.map((link: SocialLink) => (
               <a
                 key={link.id}
                 href={link.url}

@@ -1,5 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
+import type { Product, ProductImage } from "@prisma/client";
 import { Container } from "@/components/ui/Container";
 import { getFeaturedProducts } from "@/lib/api/products";
 import { getFeaturedTestimonials } from "@/lib/api/testimonials";
@@ -96,7 +97,7 @@ export default async function HomePage() {
           </FadeIn>
 
           <StaggerContainer className="mx-auto mt-12 flex flex-wrap items-end justify-center gap-12">
-            {featuredProducts.slice(0, 3).map((product) => {
+            {featuredProducts.slice(0, 3).map((product: Product & { images: ProductImage[] }) => {
               const imageUrl = getProductImageUrl(product.images);
 
               return (

@@ -1,4 +1,5 @@
 import { randomUUID } from "crypto";
+import type { Prisma } from "@prisma/client";
 import { db } from "@/lib/db";
 import { uploadToS3, deleteFromS3, extractS3Key, getCdnUrl } from "@/lib/s3";
 
@@ -123,7 +124,7 @@ export async function deleteProductImage(imageId: number): Promise<void> {
 
   // 1. DB operations first (critical) -- delete record and promote new
   //    primary if needed, all within a single transaction.
-  await db.$transaction(async (tx) => {
+  await db.$transaction(async (tx: Prisma.TransactionClient) => {
     await tx.productImage.delete({ where: { id: imageId } });
 
     if (image.isPrimary) {

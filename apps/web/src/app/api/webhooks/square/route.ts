@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createHmac, timingSafeEqual } from "crypto";
+import type { Prisma } from "@prisma/client";
 import { getSquareClient } from "@/lib/square";
 import { getOrderBySquareOrderId } from "@/lib/services/order.service";
 import { db } from "@/lib/db";
@@ -302,7 +303,7 @@ async function handlePaymentUpdated(event: SquareWebhookEvent) {
   // follows inside the same transaction so both succeed or both roll back.
 
   try {
-    await db.$transaction(async (tx) => {
+    await db.$transaction(async (tx: Prisma.TransactionClient) => {
       // 1. Create the order record (paper trail first)
       await tx.order.create({
         data: {

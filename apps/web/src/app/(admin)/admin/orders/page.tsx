@@ -1,4 +1,5 @@
 import Link from "next/link";
+import type { Order, OrderItem } from "@prisma/client";
 import { getOrders } from "@/lib/services/order.service";
 
 export default async function AdminOrdersPage() {
@@ -55,9 +56,9 @@ export default async function AdminOrdersPage() {
                 </td>
               </tr>
             )}
-            {orders.map((order) => {
+            {orders.map((order: Order & { items: OrderItem[] }) => {
               const itemCount = order.items.reduce(
-                (sum, i) => sum + i.quantity,
+                (sum: number, i: OrderItem) => sum + i.quantity,
                 0,
               );
 
