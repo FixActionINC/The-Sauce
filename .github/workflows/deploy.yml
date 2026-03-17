@@ -56,20 +56,32 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      - name: Debug - Verify AWS identity and credentials
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_DEFAULT_REGION: us-west-2
+        run: |
+          unset AWS_SESSION_TOKEN
+          echo "==> Caller identity:"
+          aws sts get-caller-identity
+          echo "==> AWS_DEFAULT_REGION=$AWS_DEFAULT_REGION"
+          echo "==> Has AWS_SESSION_TOKEN: ${AWS_SESSION_TOKEN:+YES}"
+          echo "==> Testing SSM send-command..."
+          aws ssm send-command \
+            --instance-ids "${{ secrets.EC2_INSTANCE_ID }}" \
+            --document-name "AWS-RunShellScript" \
+            --region us-west-2 \
+            --parameters 'commands=["echo hello"]' \
+            --query "Command.CommandId" \
+            --output text
+
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ env.AWS_DEPLOY_REGION }}
-
-      - name: Debug - Verify AWS identity and region
-        run: |
-          echo "==> Caller identity:"
-          aws sts get-caller-identity
-          echo "==> AWS_REGION=$AWS_REGION"
-          echo "==> AWS_DEFAULT_REGION=$AWS_DEFAULT_REGION"
-          echo "==> Instance ID: ${{ secrets.EC2_INSTANCE_ID }}"
 
       - name: Sync config files to S3
         run: |
