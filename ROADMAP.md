@@ -25,6 +25,10 @@ What's built and live:
 - SEO: sitemap, robots.txt, meta tags, OpenGraph, Twitter cards
 - CI/CD pipeline: GitHub Actions → ECR → SSM deploy to EC2
 - Dockerized deployment with Nginx reverse proxy
+- JSON-LD structured data (Organization, WebSite, Product, BreadcrumbList)
+- Dedicated public gallery page with lightbox viewer
+- Inventory alerts: low-stock badges, auto-disable, per-product thresholds
+- Product reviews & ratings with admin moderation
 
 
 ### Completed (Q1 2026)
@@ -45,6 +49,10 @@ What's built and live:
 | SEO foundations | P1 | [Complete] | Q1 2026 | Sitemap, robots.txt, meta tags, OpenGraph, Twitter cards |
 | Multi-image product galleries | P1 | [Complete] | Q1 2026 | Thumbnail navigation with Framer Motion transitions |
 | Square sandbox integration | P1 | [Complete] | Q1 2026 | Environment-prefixed SSM params, tested payment link creation |
+| JSON-LD structured data | P2 | [Complete] | Q1 2026 | Organization, WebSite, Product, BreadcrumbList schemas |
+| Dedicated gallery page | P3 | [Complete] | Q1 2026 | Public /gallery with lightbox viewer and keyboard navigation |
+| Product reviews and ratings | P1 | [Complete] | Q1 2026 | Star ratings, moderation workflow, admin review panel |
+| Inventory alerts | P1 | [Complete] | Q1 2026 | Low-stock badges, auto-disable, per-product thresholds, dashboard widget |
 
 
 ### Current Quarter Remaining (Q1 2026)
@@ -52,18 +60,18 @@ What's built and live:
 | Feature | Priority | Status | Target Quarter | Notes |
 | --- | --- | --- | --- | --- |
 | DNS + SSL setup | P0 | [In Progress] | Q1 2026 | Domain from Squarespace, Certbot SSL, production go-live |
-| JSON-LD structured data | P2 | [Planned] | Q1 2026 | Product schema, Organization schema for rich search results |
+| JSON-LD structured data | P2 | [Complete] | Q1 2026 | Organization, WebSite, Product, BreadcrumbList schemas |
+| Dedicated gallery page | P3 | [Complete] | Q1 2026 | Public /gallery page with lightbox viewer and keyboard nav |
+| Product reviews and ratings | P1 | [Complete] | Q1 2026 | Reviews with star ratings, moderation workflow, admin panel |
+| Inventory alerts | P1 | [Complete] | Q1 2026 | Low-stock badges, auto-disable, per-product thresholds, dashboard widget |
 | Square production credentials | P0 | [Planned] | Q1 2026 | Switch from sandbox to production after checkout flow testing |
-| Dedicated gallery page | P3 | [Planned] | Q1 2026 | Public /gallery page (currently homepage-only) |
 
 
 ### Near Term (Q2 2026)
 
 | Feature | Priority | Status | Target Quarter | Notes |
 | --- | --- | --- | --- | --- |
-| Product reviews and ratings | P1 | [Planned] | Q2 2026 | Customer-submitted reviews with moderation and star ratings |
 | Email marketing integration (Mailchimp) | P2 | [Planned] | Q2 2026 | Newsletter signup, abandoned cart emails, promotional campaigns |
-| Inventory alerts | P1 | [Planned] | Q2 2026 | Low-stock notifications and automatic out-of-stock handling |
 | Analytics dashboard | P2 | [Planned] | Q2 2026 | Sales trends, top products, revenue tracking, conversion funnel |
 
 
