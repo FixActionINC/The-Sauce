@@ -260,6 +260,24 @@ export function ProductForm({
         </div>
         <div className="mt-4 grid gap-4 sm:grid-cols-2">
           <InputField
+            label="Low Stock Threshold"
+            name="lowStockThreshold"
+            type="number"
+            defaultValue={product?.lowStockThreshold ?? 10}
+            placeholder="10"
+            errors={state.fieldErrors?.lowStockThreshold}
+          />
+          <div className="flex items-end">
+            <CheckboxField
+              label="Auto-disable When Out of Stock"
+              name="autoDisableWhenOutOfStock"
+              defaultChecked={product?.autoDisableWhenOutOfStock ?? false}
+              description="Automatically hide when stock reaches 0"
+            />
+          </div>
+        </div>
+        <div className="mt-4 grid gap-4 sm:grid-cols-2">
+          <InputField
             label="Square Catalog ID"
             name="squareCatalogId"
             defaultValue={product?.squareCatalogId}

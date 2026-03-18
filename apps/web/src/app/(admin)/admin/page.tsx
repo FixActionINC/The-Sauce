@@ -3,17 +3,30 @@ import {
   getProductCount,
   getActiveProductCount,
   getTotalInventory,
+  getLowStockProducts,
+  getOutOfStockProducts,
 } from "@/lib/services/product.service";
 import { getOrderCount } from "@/lib/services/order.service";
 
 export default async function AdminDashboardPage() {
-  const [totalProducts, activeProducts, totalInventory, totalOrders] =
-    await Promise.all([
-      getProductCount(),
-      getActiveProductCount(),
-      getTotalInventory(),
-      getOrderCount(),
-    ]);
+  const [
+    totalProducts,
+    activeProducts,
+    totalInventory,
+    totalOrders,
+    lowStockProducts,
+    outOfStockProducts,
+  ] = await Promise.all([
+    getProductCount(),
+    getActiveProductCount(),
+    getTotalInventory(),
+    getOrderCount(),
+    getLowStockProducts(),
+    getOutOfStockProducts(),
+  ]);
+
+  const hasInventoryAlerts =
+    lowStockProducts.length > 0 || outOfStockProducts.length > 0;
 
   const stats = [
     {
@@ -70,6 +83,69 @@ export default async function AdminDashboardPage() {
           </Link>
         ))}
       </div>
+
+      {/* Inventory Alerts */}
+      {hasInventoryAlerts && (
+        <div className="mt-8">
+          <h2 className="text-lg font-semibold">Inventory Alerts</h2>
+          <div className="mt-4 grid gap-4 sm:grid-cols-2">
+            {outOfStockProducts.length > 0 && (
+              <div className="rounded-xl border border-brand-red/30 bg-brand-red/10 p-5">
+                <p className="text-sm font-medium text-brand-red">
+                  Out of Stock
+                </p>
+                <p className="mt-2 text-3xl font-bold tabular-nums text-brand-red">
+                  {outOfStockProducts.length}
+                </p>
+                <ul className="mt-3 space-y-1">
+                  {outOfStockProducts.slice(0, 5).map((p) => (
+                    <li key={p.id}>
+                      <Link
+                        href={`/admin/products/${p.id}/edit`}
+                        className="text-sm text-brand-red hover:underline"
+                      >
+                        {p.name}
+                      </Link>
+                    </li>
+                  ))}
+                  {outOfStockProducts.length > 5 && (
+                    <li className="text-xs text-brand-red/70">
+                      +{outOfStockProducts.length - 5} more
+                    </li>
+                  )}
+                </ul>
+              </div>
+            )}
+            {lowStockProducts.length > 0 && (
+              <div className="rounded-xl border border-brand-orange/30 bg-brand-orange/10 p-5">
+                <p className="text-sm font-medium text-brand-orange">
+                  Low Stock
+                </p>
+                <p className="mt-2 text-3xl font-bold tabular-nums text-brand-orange">
+                  {lowStockProducts.length}
+                </p>
+                <ul className="mt-3 space-y-1">
+                  {lowStockProducts.slice(0, 5).map((p) => (
+                    <li key={p.id}>
+                      <Link
+                        href={`/admin/products/${p.id}/edit`}
+                        className="text-sm text-brand-orange hover:underline"
+                      >
+                        {p.name} ({p.stock} left)
+                      </Link>
+                    </li>
+                  ))}
+                  {lowStockProducts.length > 5 && (
+                    <li className="text-xs text-brand-orange/70">
+                      +{lowStockProducts.length - 5} more
+                    </li>
+                  )}
+                </ul>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* Quick links */}
       <div className="mt-8">

@@ -36,6 +36,8 @@ const productSchema = z.object({
   ingredients: z.string().optional().default(""),
   features: z.string().optional().default(""),
   stock: z.coerce.number().int().min(0, "Stock cannot be negative").default(0),
+  lowStockThreshold: z.coerce.number().int().min(0).default(10),
+  autoDisableWhenOutOfStock: z.coerce.boolean().default(false),
   isActive: z.coerce.boolean().default(true),
   isFeatured: z.coerce.boolean().default(false),
   category: z
@@ -85,6 +87,8 @@ function toServiceData(data: ProductFormData): ProductCreateData {
     ingredients: data.ingredients || null,
     features: data.features || null,
     stock: data.stock,
+    lowStockThreshold: data.lowStockThreshold,
+    autoDisableWhenOutOfStock: data.autoDisableWhenOutOfStock,
     isActive: data.isActive,
     isFeatured: data.isFeatured,
     category: data.category,
@@ -115,6 +119,9 @@ function formDataToObject(formData: FormData): Record<string, unknown> {
   // Checkboxes that are unchecked don't appear in FormData
   raw.isActive = formData.get("isActive") === "on" || formData.get("isActive") === "true";
   raw.isFeatured = formData.get("isFeatured") === "on" || formData.get("isFeatured") === "true";
+  raw.autoDisableWhenOutOfStock =
+    formData.get("autoDisableWhenOutOfStock") === "on" ||
+    formData.get("autoDisableWhenOutOfStock") === "true";
   return raw;
 }
 

@@ -79,7 +79,7 @@ export default async function AdminProductsPage() {
                     className={
                       product.stock <= 0
                         ? "text-brand-red"
-                        : product.stock <= 10
+                        : product.stock <= product.lowStockThreshold
                           ? "text-brand-orange"
                           : "text-text-primary"
                     }

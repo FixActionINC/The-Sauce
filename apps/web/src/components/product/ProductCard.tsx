@@ -11,6 +11,8 @@ export interface ProductCardProduct {
   price: number | Decimal;
   shortDescription: string | null;
   tagline: string | null;
+  stock: number;
+  lowStockThreshold: number;
   images: Pick<ProductImage, "url" | "alt" | "isPrimary">[];
 }
 
@@ -34,6 +36,16 @@ export default function ProductCard({ product }: ProductCardProps) {
       >
         {/* Product Image */}
         <div className="relative aspect-square overflow-hidden bg-surface-overlay">
+          {product.stock <= 0 && (
+            <span className="absolute left-2 top-2 z-10 rounded bg-brand-red px-2 py-0.5 text-xs font-semibold text-white">
+              Sold Out
+            </span>
+          )}
+          {product.stock > 0 && product.stock <= product.lowStockThreshold && (
+            <span className="absolute left-2 top-2 z-10 rounded bg-brand-orange px-2 py-0.5 text-xs font-semibold text-white">
+              Low Stock
+            </span>
+          )}
           {imageUrl ? (
             <Image
               src={imageUrl}

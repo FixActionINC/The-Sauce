@@ -7,6 +7,10 @@ import {
   getProductSlugs,
   getRelatedProducts,
 } from "@/lib/api/products";
+import {
+  getApprovedReviewsForProduct,
+  getProductRatingStats,
+} from "@/lib/api/reviews";
 import { formatPrice, getProductImageUrl } from "@/lib/utils";
 import { sanitize } from "@/lib/sanitize";
 import { productJsonLd, breadcrumbJsonLd } from "@/lib/structured-data";
@@ -14,6 +18,9 @@ import ProductGallery from "@/components/product/ProductGallery";
 import ProductCard from "@/components/product/ProductCard";
 import AddToCartSection from "@/components/product/AddToCartSection";
 import FeatureList from "@/components/product/FeatureList";
+import { StarRating } from "@/components/product/StarRating";
+import { ReviewCard } from "@/components/product/ReviewCard";
+import { ReviewForm } from "@/components/product/ReviewForm";
 
 type Props = {
   params: Promise<{ slug: string }>;
@@ -75,6 +82,12 @@ export default async function ProductDetailPage({ params }: Props) {
 
   // Fetch related products for the "You May Also Like" section
   const relatedProducts = await getRelatedProducts(product.id, 3);
+
+  // Fetch reviews and rating stats
+  const [reviews, ratingStats] = await Promise.all([
+    getApprovedReviewsForProduct(product.id),
+    getProductRatingStats(product.id),
+  ]);
 
   const primaryImageUrl = getProductImageUrl(product.images);
 
@@ -147,6 +160,17 @@ export default async function ProductDetailPage({ params }: Props) {
                 {product.name}
               </h1>
 
+              {/* Average Rating */}
+              {ratingStats.reviewCount > 0 && (
+                <div className="mt-2 flex items-center gap-2">
+                  <StarRating rating={ratingStats.averageRating} size="sm" />
+                  <span className="text-sm text-text-secondary">
+                    {ratingStats.averageRating.toFixed(1)} ({ratingStats.reviewCount}{" "}
+                    review{ratingStats.reviewCount !== 1 ? "s" : ""})
+                  </span>
+                </div>
+              )}
+
               {/* Price */}
               <div className="mt-5 flex items-baseline gap-3">
                 <p className="text-3xl font-bold text-brand-gold">
@@ -217,13 +241,17 @@ export default async function ProductDetailPage({ params }: Props) {
                     <span className="block text-xs text-text-secondary">
                       Availability
                     </span>
-                    {product.stock > 0 ? (
-                      <span className="mt-1 block text-sm font-medium text-green-500">
-                        In Stock
-                      </span>
-                    ) : (
+                    {product.stock <= 0 ? (
                       <span className="mt-1 block text-sm font-medium text-brand-red">
                         Out of Stock
+                      </span>
+                    ) : product.stock <= product.lowStockThreshold ? (
+                      <span className="mt-1 block text-sm font-medium text-brand-orange">
+                        Only {product.stock} left!
+                      </span>
+                    ) : (
+                      <span className="mt-1 block text-sm font-medium text-green-500">
+                        In Stock
                       </span>
                     )}
                   </div>
@@ -256,6 +284,42 @@ export default async function ProductDetailPage({ params }: Props) {
             </div>
           </div>
         )}
+
+        {/* Customer Reviews */}
+        <div className="mt-16">
+          <div className="flex items-center gap-3">
+            <h2 className="font-heading text-2xl font-bold">
+              Customer Reviews
+            </h2>
+            {ratingStats.reviewCount > 0 && (
+              <div className="flex items-center gap-2">
+                <StarRating rating={ratingStats.averageRating} size="sm" />
+                <span className="text-sm text-text-secondary">
+                  {ratingStats.averageRating.toFixed(1)} out of 5
+                </span>
+              </div>
+            )}
+          </div>
+
+          {reviews.length > 0 ? (
+            <div className="mt-6">
+              {reviews.map((review) => (
+                <ReviewCard key={review.id} review={review} />
+              ))}
+            </div>
+          ) : (
+            <p className="mt-6 text-text-secondary">
+              No reviews yet. Be the first to share your experience!
+            </p>
+          )}
+
+          <div className="mt-8">
+            <h3 className="font-heading text-xl font-bold">
+              Write a Review
+            </h3>
+            <ReviewForm productId={product.id} />
+          </div>
+        </div>
 
         {/* You May Also Like */}
         {relatedProducts.length > 0 && (

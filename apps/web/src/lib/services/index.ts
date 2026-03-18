@@ -8,3 +8,4 @@ export * from "./auth.service";
 export * from "./session.service";
 export * from "./testimonial.service";
 export * from "./gallery.service";
+export * from "./review.service";

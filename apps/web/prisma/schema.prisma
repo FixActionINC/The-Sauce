@@ -20,7 +20,9 @@ model Product {
   squareVariationId String?  @unique
   ingredients      String? @db.Text
   features         String? @db.Text // JSON string array
-  stock            Int      @default(0)
+  stock                     Int      @default(0)
+  lowStockThreshold         Int      @default(10)
+  autoDisableWhenOutOfStock  Boolean  @default(false)
   isActive         Boolean  @default(true)
   isFeatured       Boolean  @default(false)
   category         String   @default("original") // original, hot, mild, limited-edition, bundle
@@ -39,7 +41,8 @@ model Product {
   sugars      String?
   protein     String?
 
-  images ProductImage[]
+  images  ProductImage[]
+  reviews Review[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -172,5 +175,30 @@ model ContactMessage {
   createdAt DateTime @default(now())
 
   @@index([isRead])
+  @@index([createdAt])
+}
+
+enum ReviewStatus {
+  pending
+  approved
+  rejected
+}
+
+model Review {
+  id          Int          @id @default(autoincrement())
+  productId   Int
+  product     Product      @relation(fields: [productId], references: [id], onDelete: Cascade)
+  rating      Int
+  authorName  String
+  authorEmail String
+  title       String
+  content     String       @db.Text
+  status      ReviewStatus @default(pending)
+  isVerified  Boolean      @default(false)
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+
+  @@index([productId, status])
+  @@index([status])
   @@index([createdAt])
 }

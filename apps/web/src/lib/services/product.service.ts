@@ -27,6 +27,8 @@ export interface ProductCreateData {
   ingredients?: string | null;
   features?: string | null;
   stock: number;
+  lowStockThreshold: number;
+  autoDisableWhenOutOfStock: boolean;
   isActive: boolean;
   isFeatured: boolean;
   category: string;
@@ -170,6 +172,61 @@ export async function isSlugTaken(
 
   const existing = await db.product.findFirst({ where });
   return existing !== null;
+}
+
+// ---------------------------------------------------------------------------
+// Inventory alert queries
+// ---------------------------------------------------------------------------
+
+/**
+ * Fetch active products whose stock is low (above 0 but at or below their
+ * per-product lowStockThreshold). Filtering is done in JS because Prisma
+ * does not support comparing two columns in a `where` clause.
+ */
+export const getLowStockProducts = cache(async () => {
+  const products = await db.product.findMany({
+    where: { isActive: true, stock: { gt: 0 } },
+    select: {
+      id: true,
+      name: true,
+      slug: true,
+      stock: true,
+      lowStockThreshold: true,
+    },
+  });
+  return products.filter((p) => p.stock <= p.lowStockThreshold);
+});
+
+/**
+ * Fetch products that are completely out of stock (stock <= 0).
+ */
+export const getOutOfStockProducts = cache(async () => {
+  return db.product.findMany({
+    where: { stock: { lte: 0 } },
+    select: {
+      id: true,
+      name: true,
+      slug: true,
+      stock: true,
+    },
+  });
+});
+
+/**
+ * Automatically disable a product if it has run out of stock and has the
+ * autoDisableWhenOutOfStock flag enabled. Uses `updateMany` with a guard
+ * clause so the operation is a no-op when conditions are not met.
+ */
+export async function autoDisableIfOutOfStock(productId: number) {
+  return db.product.updateMany({
+    where: {
+      id: productId,
+      stock: { lte: 0 },
+      autoDisableWhenOutOfStock: true,
+      isActive: true,
+    },
+    data: { isActive: false },
+  });
 }
 
 // ---------------------------------------------------------------------------

@@ -3,6 +3,7 @@ import { createHmac, timingSafeEqual } from "crypto";
 import type { Prisma } from "@prisma/client";
 import { getSquareClient } from "@/lib/square";
 import { getOrderBySquareOrderId } from "@/lib/services/order.service";
+import { autoDisableIfOutOfStock } from "@/lib/services/product.service";
 import { db } from "@/lib/db";
 
 /**
@@ -374,6 +375,22 @@ async function handlePaymentUpdated(event: SquareWebhookEvent) {
     console.log(
       `[webhook] Order + stock update persisted for squareOrderId ${squareOrderId}.`,
     );
+
+    // Best-effort: auto-disable products that have reached zero stock
+    // and have the autoDisableWhenOutOfStock flag enabled.
+    for (const item of lineItems) {
+      const productId = parseProductId(item.note);
+      if (productId) {
+        try {
+          await autoDisableIfOutOfStock(productId);
+        } catch (err) {
+          console.error(
+            `[webhook] Failed to auto-disable product ${productId}:`,
+            err,
+          );
+        }
+      }
+    }
   } catch (err) {
     // Transaction failed -- both order and stock changes are rolled back.
     // The payment was already captured by Square. The order can be reconciled
