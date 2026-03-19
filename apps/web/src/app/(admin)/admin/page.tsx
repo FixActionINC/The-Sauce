@@ -6,7 +6,35 @@ import {
   getLowStockProducts,
   getOutOfStockProducts,
 } from "@/lib/services/product.service";
-import { getOrderCount } from "@/lib/services/order.service";
+import {
+  getOrderCount,
+  getRevenueStats,
+  getDailyRevenue,
+  getTopSellingProducts,
+  getRevenueByCategorySummary,
+} from "@/lib/services/order.service";
+import RevenueChart from "@/components/admin/charts/RevenueChart";
+import TopProductsChart from "@/components/admin/charts/TopProductsChart";
+import CategoryChart from "@/components/admin/charts/CategoryChart";
+
+function formatCents(cents: number): string {
+  return (cents / 100).toLocaleString("en-US", {
+    style: "currency",
+    currency: "USD",
+  });
+}
+
+function formatDollars(dollars: number): string {
+  return dollars.toLocaleString("en-US", {
+    style: "currency",
+    currency: "USD",
+  });
+}
+
+function percentChange(current: number, previous: number): number | null {
+  if (previous === 0) return current > 0 ? 100 : null;
+  return Math.round(((current - previous) / previous) * 100);
+}
 
 export default async function AdminDashboardPage() {
   const [
@@ -16,6 +44,10 @@ export default async function AdminDashboardPage() {
     totalOrders,
     lowStockProducts,
     outOfStockProducts,
+    revenueStats,
+    dailyRevenue,
+    topProducts,
+    categoryRevenue,
   ] = await Promise.all([
     getProductCount(),
     getActiveProductCount(),
@@ -23,33 +55,19 @@ export default async function AdminDashboardPage() {
     getOrderCount(),
     getLowStockProducts(),
     getOutOfStockProducts(),
+    getRevenueStats(),
+    getDailyRevenue(30),
+    getTopSellingProducts(5),
+    getRevenueByCategorySummary(),
   ]);
 
   const hasInventoryAlerts =
     lowStockProducts.length > 0 || outOfStockProducts.length > 0;
 
-  const stats = [
-    {
-      label: "Total Products",
-      value: totalProducts,
-      href: "/admin/products",
-    },
-    {
-      label: "Active Products",
-      value: activeProducts,
-      href: "/admin/products",
-    },
-    {
-      label: "Total Inventory",
-      value: totalInventory,
-      href: "/admin/products",
-    },
-    {
-      label: "Total Orders",
-      value: totalOrders,
-      href: "/admin/orders",
-    },
-  ];
+  const monthChange = percentChange(
+    revenueStats.thisMonthRevenue,
+    revenueStats.lastMonthRevenue,
+  );
 
   const quickLinks = [
     { label: "Add New Product", href: "/admin/products/new" },
@@ -66,25 +84,82 @@ export default async function AdminDashboardPage() {
         Overview of your store.
       </p>
 
-      {/* Stats cards */}
+      {/* Row 1: Key Metrics */}
       <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        {stats.map((stat) => (
-          <Link
-            key={stat.label}
-            href={stat.href}
-            className="rounded-xl border border-surface-overlay bg-surface-elevated p-5 transition-colors hover:border-brand-orange/30"
-          >
-            <p className="text-sm font-medium text-text-secondary">
-              {stat.label}
-            </p>
-            <p className="mt-2 text-3xl font-bold tabular-nums">
-              {stat.value}
-            </p>
-          </Link>
-        ))}
+        <div className="rounded-xl border border-surface-overlay bg-surface-elevated p-5">
+          <p className="text-sm font-medium text-text-secondary">
+            Total Revenue
+          </p>
+          <p className="mt-2 text-3xl font-bold tabular-nums">
+            {formatCents(revenueStats.totalRevenue)}
+          </p>
+        </div>
+
+        <div className="rounded-xl border border-surface-overlay bg-surface-elevated p-5">
+          <p className="text-sm font-medium text-text-secondary">This Month</p>
+          <p className="mt-2 text-3xl font-bold tabular-nums">
+            {formatCents(revenueStats.thisMonthRevenue)}
+          </p>
+          {monthChange !== null && (
+            <span
+              className={`mt-1 inline-block rounded-full px-2 py-0.5 text-xs font-medium ${
+                monthChange >= 0
+                  ? "bg-green-500/15 text-green-400"
+                  : "bg-red-500/15 text-red-400"
+              }`}
+            >
+              {monthChange >= 0 ? "+" : ""}
+              {monthChange}% vs last month
+            </span>
+          )}
+        </div>
+
+        <Link
+          href="/admin/orders"
+          className="rounded-xl border border-surface-overlay bg-surface-elevated p-5 transition-colors hover:border-brand-orange/30"
+        >
+          <p className="text-sm font-medium text-text-secondary">
+            Total Orders
+          </p>
+          <p className="mt-2 text-3xl font-bold tabular-nums">{totalOrders}</p>
+        </Link>
+
+        <div className="rounded-xl border border-surface-overlay bg-surface-elevated p-5">
+          <p className="text-sm font-medium text-text-secondary">
+            Avg Order Value
+          </p>
+          <p className="mt-2 text-3xl font-bold tabular-nums">
+            {formatCents(revenueStats.avgOrderValue)}
+          </p>
+        </div>
       </div>
 
-      {/* Inventory Alerts */}
+      {/* Row 2: Revenue Trend (full width) */}
+      <div className="mt-6 rounded-xl border border-surface-overlay bg-surface-elevated p-5">
+        <h2 className="text-lg font-semibold">Revenue (Last 30 Days)</h2>
+        <div className="mt-4">
+          <RevenueChart data={dailyRevenue} />
+        </div>
+      </div>
+
+      {/* Row 3: Top Products + Category Breakdown */}
+      <div className="mt-6 grid gap-6 lg:grid-cols-2">
+        <div className="rounded-xl border border-surface-overlay bg-surface-elevated p-5">
+          <h2 className="text-lg font-semibold">Top Products</h2>
+          <div className="mt-4">
+            <TopProductsChart data={topProducts} />
+          </div>
+        </div>
+
+        <div className="rounded-xl border border-surface-overlay bg-surface-elevated p-5">
+          <h2 className="text-lg font-semibold">Sales by Category</h2>
+          <div className="mt-4">
+            <CategoryChart data={categoryRevenue} />
+          </div>
+        </div>
+      </div>
+
+      {/* Row 4: Inventory Alerts */}
       {hasInventoryAlerts && (
         <div className="mt-8">
           <h2 className="text-lg font-semibold">Inventory Alerts</h2>
@@ -147,7 +222,7 @@ export default async function AdminDashboardPage() {
         </div>
       )}
 
-      {/* Quick links */}
+      {/* Row 5: Quick Actions */}
       <div className="mt-8">
         <h2 className="text-lg font-semibold">Quick Actions</h2>
         <div className="mt-4 grid gap-3 sm:grid-cols-2">

@@ -29,6 +29,7 @@ What's built and live:
 - Dedicated public gallery page with lightbox viewer
 - Inventory alerts: low-stock badges, auto-disable, per-product thresholds
 - Product reviews & ratings with admin moderation
+- Admin analytics dashboard: revenue trends, top products, category breakdown
 
 
 ### Completed (Q1 2026)
@@ -53,6 +54,7 @@ What's built and live:
 | Dedicated gallery page | P3 | [Complete] | Q1 2026 | Public /gallery with lightbox viewer and keyboard navigation |
 | Product reviews and ratings | P1 | [Complete] | Q1 2026 | Star ratings, moderation workflow, admin review panel |
 | Inventory alerts | P1 | [Complete] | Q1 2026 | Low-stock badges, auto-disable, per-product thresholds, dashboard widget |
+| Analytics dashboard | P2 | [Complete] | Q1 2026 | Recharts: revenue trend, top products, category breakdown, key metrics |
 
 
 ### Current Quarter Remaining (Q1 2026)
@@ -60,10 +62,6 @@ What's built and live:
 | Feature | Priority | Status | Target Quarter | Notes |
 | --- | --- | --- | --- | --- |
 | DNS + SSL setup | P0 | [In Progress] | Q1 2026 | Domain from Squarespace, Certbot SSL, production go-live |
-| JSON-LD structured data | P2 | [Complete] | Q1 2026 | Organization, WebSite, Product, BreadcrumbList schemas |
-| Dedicated gallery page | P3 | [Complete] | Q1 2026 | Public /gallery page with lightbox viewer and keyboard nav |
-| Product reviews and ratings | P1 | [Complete] | Q1 2026 | Reviews with star ratings, moderation workflow, admin panel |
-| Inventory alerts | P1 | [Complete] | Q1 2026 | Low-stock badges, auto-disable, per-product thresholds, dashboard widget |
 | Square production credentials | P0 | [Planned] | Q1 2026 | Switch from sandbox to production after checkout flow testing |
 
 
@@ -72,7 +70,6 @@ What's built and live:
 | Feature | Priority | Status | Target Quarter | Notes |
 | --- | --- | --- | --- | --- |
 | Email marketing integration (Mailchimp) | P2 | [Planned] | Q2 2026 | Newsletter signup, abandoned cart emails, promotional campaigns |
-| Analytics dashboard | P2 | [Planned] | Q2 2026 | Sales trends, top products, revenue tracking, conversion funnel |
 
 
 ### Future (Q3–Q4 2026)
