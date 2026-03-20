@@ -86,6 +86,13 @@ output "ssm_square_environment_name" {
   value       = aws_ssm_parameter.square_environment.name
 }
 
+# --- Route 53 Outputs ---
+
+output "route53_name_servers" {
+  description = "Name servers for the hosted zone — set these at your domain registrar"
+  value       = aws_route53_zone.main.name_servers
+}
+
 # --- CI/CD Outputs ---
 
 output "cicd_access_key_id" {
