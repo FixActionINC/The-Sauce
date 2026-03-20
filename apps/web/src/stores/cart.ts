@@ -38,14 +38,21 @@ interface CartActions {
 
 export interface CartStore extends CartState, CartActions {
   /** Sum of all item quantities. */
-  readonly totalItems: number;
+  totalItems: number;
   /** Sum of (price * quantity) for every item. */
-  readonly totalPrice: number;
+  totalPrice: number;
 }
 
 /* ------------------------------------------------------------------ */
 /*  Store                                                              */
 /* ------------------------------------------------------------------ */
+
+function computeTotals(items: CartItem[]) {
+  return {
+    totalItems: items.reduce((sum, item) => sum + item.quantity, 0),
+    totalPrice: items.reduce((sum, item) => sum + item.price * item.quantity, 0),
+  };
+}
 
 export const useCartStore = create<CartStore>()(
   persist(
@@ -53,17 +60,8 @@ export const useCartStore = create<CartStore>()(
       /* ---------- state ---------- */
       items: [],
       isDrawerOpen: false,
-
-      /* ---------- computed (getter-based) ---------- */
-      get totalItems() {
-        return get().items.reduce((sum, item) => sum + item.quantity, 0);
-      },
-      get totalPrice() {
-        return get().items.reduce(
-          (sum, item) => sum + item.price * item.quantity,
-          0,
-        );
-      },
+      totalItems: 0,
+      totalPrice: 0,
 
       /* ---------- actions ---------- */
       addItem(incoming, quantity = 1) {
@@ -72,34 +70,34 @@ export const useCartStore = create<CartStore>()(
             (i) => i.productId === incoming.productId,
           );
 
+          let newItems: CartItem[];
           if (existing) {
             const newQty = Math.min(
               existing.quantity + quantity,
               incoming.maxStock,
             );
-            return {
-              items: state.items.map((i) =>
-                i.productId === incoming.productId
-                  ? { ...i, quantity: newQty, maxStock: incoming.maxStock }
-                  : i,
-              ),
-            };
+            newItems = state.items.map((i) =>
+              i.productId === incoming.productId
+                ? { ...i, quantity: newQty, maxStock: incoming.maxStock }
+                : i,
+            );
+          } else {
+            const clampedQty = Math.min(
+              Math.max(quantity, 1),
+              incoming.maxStock,
+            );
+            newItems = [...state.items, { ...incoming, quantity: clampedQty }];
           }
 
-          const clampedQty = Math.min(
-            Math.max(quantity, 1),
-            incoming.maxStock,
-          );
-          return {
-            items: [...state.items, { ...incoming, quantity: clampedQty }],
-          };
+          return { items: newItems, ...computeTotals(newItems) };
         });
       },
 
       removeItem(productId) {
-        set((state) => ({
-          items: state.items.filter((i) => i.productId !== productId),
-        }));
+        set((state) => {
+          const newItems = state.items.filter((i) => i.productId !== productId);
+          return { items: newItems, ...computeTotals(newItems) };
+        });
       },
 
       updateQuantity(productId, quantity) {
@@ -108,16 +106,17 @@ export const useCartStore = create<CartStore>()(
           return;
         }
 
-        set((state) => ({
-          items: state.items.map((i) => {
+        set((state) => {
+          const newItems = state.items.map((i) => {
             if (i.productId !== productId) return i;
             return { ...i, quantity: Math.min(quantity, i.maxStock) };
-          }),
-        }));
+          });
+          return { items: newItems, ...computeTotals(newItems) };
+        });
       },
 
       clearCart() {
-        set({ items: [] });
+        set({ items: [], totalItems: 0, totalPrice: 0 });
       },
 
       openDrawer() {
@@ -132,8 +131,20 @@ export const useCartStore = create<CartStore>()(
     }),
     {
       name: "the-sauce-cart",
-      /** Only persist the items array -- not transient UI state. */
-      partialize: (state) => ({ items: state.items }),
+      /** Persist items + computed totals; exclude transient UI state. */
+      partialize: (state) => ({
+        items: state.items,
+        totalItems: state.totalItems,
+        totalPrice: state.totalPrice,
+      }),
+      /** Recalculate totals on rehydration in case persisted totals are stale. */
+      onRehydrateStorage: () => (state) => {
+        if (state) {
+          const totals = computeTotals(state.items);
+          state.totalItems = totals.totalItems;
+          state.totalPrice = totals.totalPrice;
+        }
+      },
     },
   ),
 );

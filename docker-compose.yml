@@ -66,7 +66,7 @@ services:
   # ---------------------------------------------------------------------------
   # Certbot - Automated SSL Certificate Renewal
   # ---------------------------------------------------------------------------
-  # Runs in a loop, checking for certificate renewals every 12 hours.
+  # Runs in a loop, checking for certificate renewals once daily.
   # Initial certificate must be obtained manually:
   #   docker compose run --rm certbot certonly --webroot -w /var/www/certbot \
   #     -d jonesingforsauce.com -d www.jonesingforsauce.com \
@@ -76,7 +76,7 @@ services:
     volumes:
       - certbot-webroot:/var/www/certbot
       - certbot-certs:/etc/letsencrypt
-    entrypoint: "/bin/sh -c 'trap exit TERM; while :; do certbot renew; sleep 12h & wait $${!}; done'"
+    entrypoint: "/bin/sh -c 'trap exit TERM; while :; do certbot renew; sleep 24h & wait $${!}; done'"
 
 volumes:
   # Certbot ACME challenge webroot

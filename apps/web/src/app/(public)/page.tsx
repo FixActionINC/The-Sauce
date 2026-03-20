@@ -17,7 +17,6 @@ import {
 } from "@/components/motion";
 import { TestimonialCarousel } from "@/components/home/TestimonialCarousel";
 import { BrandMarquee } from "@/components/home/BrandMarquee";
-import { UsageSection } from "@/components/home/UsageSection";
 import { PhotoGrid } from "@/components/home/PhotoGrid";
 import { VideoSection } from "@/components/home/VideoSection";
 
@@ -139,8 +138,8 @@ export default async function HomePage() {
         </Container>
       </section>
 
-      {/* ── Put It On Everything ── full-width orange/red gradient */}
-      <UsageSection />
+      {/* ── Photo Grid ── Instagram-style */}
+      <PhotoGrid images={galleryImages} />
 
       {/* ── Story with Tyrone ── */}
       <Container>
@@ -188,9 +187,6 @@ export default async function HomePage() {
 
       {/* ── Video Section ── */}
       <VideoSection videoUrl={settings?.heroVideoUrl ?? null} />
-
-      {/* ── Photo Grid ── Instagram-style */}
-      <PhotoGrid images={galleryImages} />
 
       {/* ── Final CTA ── solid red background */}
       <section className="bg-brand-red py-16 lg:py-24">
